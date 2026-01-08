@@ -64,16 +64,7 @@ body.dark-mode {
     pointer-events: none;
 }
 
-@media (max-width: 480px) {
-    .tooltip-text {
-        width: 220px;
-        /* Smaller width for mobile */
-        right: -40px;
-        /* Shift right to prevent left cutoff */
-        font-size: 0.8rem;
-        /* Slightly smaller text */
-    }
-}
+
 
 /* Arrow */
 .tooltip-text::after {
@@ -89,6 +80,22 @@ body.dark-mode {
 .tooltip-text.active {
     visibility: visible;
     opacity: 1;
+}
+
+@media (max-width: 480px) {
+    .tooltip-text {
+        width: 220px;
+        /* Smaller width for mobile */
+        right: -70px;
+        /* Shift right to prevent left cutoff */
+        font-size: 0.8rem;
+        /* Slightly smaller text */
+    }
+
+    .tooltip-text::after {
+        right: 74px;
+        /* Adjust arrow to align with icon after container shift */
+    }
 }
 
 .app-footer {
