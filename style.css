@@ -186,22 +186,31 @@ body {
 /* Tabs */
 .tab-nav {
     display: flex;
+    justify-content: center;
+    /* Center tabs */
+    flex-wrap: wrap;
+    /* Allow wrapping on small screens */
     background: var(--card-bg);
     padding: 5px;
     border-radius: 99px;
     border: 1px solid var(--border);
+    max-width: 100%;
+    /* Ensure it doesn't overflow */
 }
 
 .tab-btn {
     background: none;
     border: none;
     color: var(--text-secondary);
-    padding: 10px 20px;
+    padding: 8px 16px;
+    /* Slightly reduced padding */
     border-radius: 99px;
     font-family: inherit;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    font-size: 0.9rem;
+    /* Slightly smaller text for better fit */
 }
 
 .tab-btn.active {
