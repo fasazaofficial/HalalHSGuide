@@ -126,6 +126,8 @@ body {
     margin-bottom: 30px;
     position: relative;
     width: 100%;
+    padding-right: 48px;
+    /* Reserve space for absolute toggle button on mobile */
 }
 
 .theme-toggle {
