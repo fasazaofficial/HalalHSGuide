@@ -11,73 +11,7 @@ const CONFIG = {
 // ... (rest of config)
 
 // Logic Update in createCard
-function createCard(item) {
-    // Identify fields dynamically based on tab
-    let name = item['Restaurant Name'] || item['Butcher Name'] || item['Brand'] || item['Supplier name'] || 'Unknown';
-    // Fallback if keys are messed up due to header parsing issues
-    if (name === 'Unknown') {
-        const keys = Object.keys(item);
-        for (let k of keys) {
-            if (k.toLowerCase().includes('name') || k.toLowerCase().includes('brand')) {
-                name = item[k];
-                break;
-            }
-        }
-        if (name === 'Unknown') name = Object.values(item)[0];
-    }
 
-    let status = item['Status'] || 'Unknown';
-    let address = item['Address'] || item['Location'] || item['Contact Details (Address, Phone, Website)'] || '';
-    let notes = item['Notes'] || item['Notes & other enquiry details'] || '';
-
-    // Supplier Info
-    let sources = [];
-    if (item['Supplier']) sources.push(`Supplier: ${item['Supplier']}`);
-    if (item['Meat Source']) sources.push(`Meat: ${item['Meat Source']}`);
-    if (item['Chicken Source']) sources.push(`Chicken: ${item['Chicken Source']}`);
-    if (item['Meat Supplier']) sources.push(`Meat: ${item['Meat Supplier']}`);
-    if (item['Chicken Supplier']) sources.push(`Chicken: ${item['Chicken Supplier']}`);
-
-    // Consolidated Source String for display
-    let sourceDisplay = sources.join(' • ');
-
-    // Status Styling
-    let statusClass = 'status-badge';
-    if (status.toLowerCase().includes('verified')) statusClass += ' status-verified';
-    else if (status.toLowerCase().includes('confirmed')) statusClass += ' status-confirmed';
-    else if (status.toLowerCase().includes('pending')) statusClass += ' status-pending';
-    else if (status.toLowerCase().includes('issues')) statusClass += ' status-issues';
-    else if (status.toLowerCase().includes('partially')) statusClass += ' status-partial';
-
-    const div = document.createElement('div');
-    div.className = 'item-card';
-    div.innerHTML = `
-        <div class="item-header">
-            <h3 class="item-name">${name}</h3>
-            <span class="${statusClass}">${status}</span>
-        </div>
-        <div class="item-meta">
-            ${address ? `
-            <div class="meta-row">
-                <i data-lucide="map-pin"></i>
-                <span style="white-space: pre-line;">${address}</span>
-            </div>` : ''}
-            
-            ${sourceDisplay ? `
-            <div class="meta-row">
-                <i data-lucide="package"></i>
-                <span>${sourceDisplay}</span>
-            </div>` : ''}
-            
-            ${notes ? `
-            <div class="meta-row">
-                <i data-lucide="info"></i>
-                <span>${notes}</span>
-            </div>` : ''}
-        </div>
-    `;
-    return div;
-}
 
 const STATE = {
     currentTab: 'restaurants',
@@ -91,7 +25,8 @@ const elements = {
     dataList: document.getElementById('dataList'),
     loading: document.getElementById('loadingState'),
     error: document.getElementById('errorState'),
-    search: document.getElementById('searchInput')
+    search: document.getElementById('searchInput'),
+    searchStats: document.getElementById('searchStats')
 };
 
 // Initialize
@@ -140,8 +75,10 @@ function setupTabs() {
                 elements.tabs.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
 
-                // Clear Search
+                // Clear Search and Stats
                 elements.search.value = '';
+                elements.searchStats.classList.add('hidden');
+                elements.searchStats.textContent = '';
 
                 // Load Data
                 loadTab(tab);
@@ -152,8 +89,18 @@ function setupTabs() {
 
 function setupSearch() {
     elements.search.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        renderData(filterData(STATE.data, query));
+        const query = e.target.value.toLowerCase().trim();
+        const filtered = filterData(STATE.data, query);
+        renderData(filtered);
+
+        // Update Stats
+        if (query.length > 0) {
+            elements.searchStats.classList.remove('hidden');
+            const count = filtered.length;
+            elements.searchStats.textContent = `${count} result${count !== 1 ? 's' : ''} found`;
+        } else {
+            elements.searchStats.classList.add('hidden');
+        }
     });
 }
 
@@ -464,6 +411,7 @@ function createCard(item) {
 
 // Tooltip Logic
 window.toggleTooltip = function (element) {
+    console.log('Tooltip clicked', element);
     // Close other tooltips first
     const allTooltips = document.querySelectorAll('.tooltip-text.active');
     allTooltips.forEach(t => {

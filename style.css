@@ -64,6 +64,17 @@ body.dark-mode {
     pointer-events: none;
 }
 
+@media (max-width: 480px) {
+    .tooltip-text {
+        width: 220px;
+        /* Smaller width for mobile */
+        right: -40px;
+        /* Shift right to prevent left cutoff */
+        font-size: 0.8rem;
+        /* Slightly smaller text */
+    }
+}
+
 /* Arrow */
 .tooltip-text::after {
     content: "";
@@ -78,6 +89,18 @@ body.dark-mode {
 .tooltip-text.active {
     visibility: visible;
     opacity: 1;
+}
+
+.app-footer {
+    margin-top: 40px;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 /* Link Styles */
@@ -192,7 +215,7 @@ body {
     /* Allow wrapping on small screens */
     background: var(--card-bg);
     padding: 5px;
-    border-radius: 99px;
+    border-radius: 20px;
     border: 1px solid var(--border);
     max-width: 100%;
     /* Ensure it doesn't overflow */
@@ -204,7 +227,7 @@ body {
     color: var(--text-secondary);
     padding: 8px 16px;
     /* Slightly reduced padding */
-    border-radius: 99px;
+    border-radius: 20px;
     font-family: inherit;
     font-weight: 500;
     cursor: pointer;
@@ -251,6 +274,14 @@ body {
 
 .search-bar input:focus {
     border-color: var(--accent);
+}
+
+.search-stats {
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-left: 4px;
+    font-weight: 500;
 }
 
 /* Data Grid */
