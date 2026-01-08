@@ -15,6 +15,85 @@
     --radius: 16px;
     /* Slightly softer */
     --font-main: 'Outfit', sans-serif;
+    --link-color: #2563eb;
+    /* Blue-600 */
+    --tooltip-bg: #1e293b;
+    --tooltip-text: #ffffff;
+}
+
+body.dark-mode {
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --border: #334155;
+    --accent-glow: rgba(16, 185, 129, 0.2);
+    --link-color: #60a5fa;
+    /* Blue-400 */
+    --tooltip-bg: #f8fafc;
+    --tooltip-text: #0f172a;
+    /* Adjust status colors for dark mode visibility */
+    --success: #4ade80;
+    --warning: #facc15;
+}
+
+/* ... existing styles ... */
+
+/* TOOLTIP STYLES UPDATE */
+/* Tooltip Text */
+.tooltip-text {
+    visibility: hidden;
+    width: 280px;
+    background-color: var(--tooltip-bg);
+    color: var(--tooltip-text);
+    text-align: left;
+    border-radius: 8px;
+    padding: 12px;
+    position: absolute;
+    z-index: 100;
+    top: 100%;
+    right: -10px;
+    margin-top: 8px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    font-weight: 500;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    /* Stronger shadow */
+    pointer-events: none;
+}
+
+/* Arrow */
+.tooltip-text::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    right: 14px;
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent transparent var(--tooltip-bg) transparent;
+}
+
+.tooltip-text.active {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Link Styles */
+a {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.text-link {
+    color: var(--link-color);
+    text-decoration: none;
+    /* Force color override if needed */
 }
 
 * {
@@ -45,6 +124,31 @@ body {
     align-items: center;
     gap: 20px;
     margin-bottom: 30px;
+    position: relative;
+    width: 100%;
+}
+
+.theme-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.2s, color 0.2s;
+    z-index: 10;
+}
+
+.theme-toggle:hover {
+    background-color: var(--border);
+}
+
+.theme-toggle svg {
+    width: 24px;
+    height: 24px;
 }
 
 .logo {
@@ -301,46 +405,6 @@ body {
     height: 16px;
 }
 
-/* Tooltip Text */
-.tooltip-text {
-    visibility: hidden;
-    width: 280px;
-    background-color: var(--text-primary);
-    color: #fff;
-    text-align: left;
-    border-radius: 8px;
-    padding: 12px;
-    position: absolute;
-    z-index: 100;
-    top: 100%;
-    right: -10px;
-    /* Align towards left to prevent overflow on mobile */
-    margin-top: 8px;
-    opacity: 0;
-    transition: opacity 0.2s;
-    font-size: 0.85rem;
-    line-height: 1.4;
-    font-weight: 400;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    pointer-events: none;
-    /* Prevent flickering */
-}
 
-/* Arrow */
-.tooltip-text::after {
-    content: "";
-    position: absolute;
-    bottom: 100%;
-    right: 14px;
-    /* Match icon center roughly */
-    border-width: 6px;
-    border-style: solid;
-    border-color: transparent transparent var(--text-primary) transparent;
-}
-
-.tooltip-text.active {
-    visibility: visible;
-    opacity: 1;
-}
 
 ```

@@ -98,7 +98,36 @@ const elements = {
 function init() {
     setupTabs();
     setupSearch();
+    setupTheme();
     loadTab('restaurants');
+}
+
+function setupTheme() {
+    const toggleBtn = document.getElementById('themeToggle');
+    const savedTheme = localStorage.getItem('theme');
+
+    // Apply saved theme
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        // Update icon to sun
+        toggleBtn.innerHTML = '<i data-lucide="sun"></i>';
+    }
+
+    toggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+
+        // Save preference
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+
+        // Toggle Icon
+        toggleBtn.innerHTML = isDark
+            ? '<i data-lucide="sun"></i>'
+            : '<i data-lucide="moon"></i>';
+
+        // Re-render icons since we replaced innerHTML
+        if (window.lucide) window.lucide.createIcons();
+    });
 }
 
 // Event Listeners
