@@ -49,7 +49,6 @@ function setupTheme() {
     }
 
     toggleBtn.addEventListener('click', () => {
-        // Toggle theme
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
 
@@ -72,29 +71,17 @@ function setupTabs() {
         btn.addEventListener('click', () => {
             const tab = btn.dataset.tab;
             if (tab !== STATE.currentTab) {
-                // Add fade-out animation
-                elements.dataList.style.opacity = '0';
-                elements.dataList.style.transform = 'translateY(10px)';
+                // Update UI
+                elements.tabs.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
 
-                setTimeout(() => {
-                    // Update UI
-                    elements.tabs.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
+                // Clear Search and Stats
+                elements.search.value = '';
+                elements.searchStats.classList.add('hidden');
+                elements.searchStats.textContent = '';
 
-                    // Clear Search and Stats
-                    elements.search.value = '';
-                    elements.searchStats.classList.add('hidden');
-                    elements.searchStats.textContent = '';
-
-                    // Load Data
-                    loadTab(tab);
-
-                    // Fade back in
-                    setTimeout(() => {
-                        elements.dataList.style.opacity = '1';
-                        elements.dataList.style.transform = 'translateY(0)';
-                    }, 50);
-                }, 150);
+                // Load Data
+                loadTab(tab);
             }
         });
     });
@@ -255,15 +242,8 @@ function renderData(data) {
         return;
     }
 
-    data.forEach((item, index) => {
+    data.forEach(item => {
         const card = createCard(item);
-
-        // Add stagger animation delay
-        const cardElement = card.querySelector('.item-card');
-        if (cardElement) {
-            cardElement.style.animationDelay = `${index * 0.05}s`;
-        }
-
         elements.dataList.appendChild(card);
     });
 
