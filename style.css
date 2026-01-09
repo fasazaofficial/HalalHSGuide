@@ -71,7 +71,7 @@ body.dark-mode {
     content: "";
     position: absolute;
     bottom: 100%;
-    right: 14px;
+    right: 12px;
     border-width: 6px;
     border-style: solid;
     border-color: transparent transparent var(--tooltip-bg) transparent;
@@ -93,7 +93,7 @@ body.dark-mode {
     }
 
     .tooltip-text::after {
-        right: 74px;
+        right: 72px;
         /* Adjust arrow to align with icon after container shift */
     }
 }
@@ -310,12 +310,25 @@ body {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 20px;
-    transition: transform 0.2s, border-color 0.2s;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+
+    /* Slide-up animation */
+    animation: slideUp 0.4s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+@keyframes slideUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .item-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px);
     border-color: var(--text-secondary);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .item-header {

@@ -242,9 +242,15 @@ function renderData(data) {
         return;
     }
 
-    data.forEach(item => {
+    data.forEach((item, index) => {
         const card = createCard(item);
         elements.dataList.appendChild(card);
+
+        // Add staggered animation delay
+        const cardElement = card.querySelector('.item-card');
+        if (cardElement) {
+            cardElement.style.animationDelay = `${index * 0.05}s`;
+        }
     });
 
     // Refresh icons
