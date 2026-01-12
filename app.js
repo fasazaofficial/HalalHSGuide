@@ -27,7 +27,10 @@ const elements = {
     error: document.getElementById('errorState'),
     search: document.getElementById('searchInput'),
     searchStats: document.getElementById('searchStats'),
-    formContainer: document.getElementById('formContainer')
+    searchHint: document.getElementById('searchHint'),
+    formContainer: document.getElementById('formContainer'),
+    mapContainer: document.getElementById('mapContainer'),
+    readmeContainer: document.getElementById('readmeContainer')
 };
 
 // Initialize
@@ -80,6 +83,7 @@ function setupTabs() {
                 elements.search.value = '';
                 elements.searchStats.classList.add('hidden');
                 elements.searchStats.textContent = '';
+                elements.searchHint.classList.add('hidden');
 
                 // Load Data
                 loadTab(tab);
@@ -87,6 +91,8 @@ function setupTabs() {
         });
     });
 }
+
+let searchTimeout;
 
 function setupSearch() {
     elements.search.addEventListener('input', (e) => {
@@ -96,11 +102,36 @@ function setupSearch() {
 
         // Update Stats
         if (query.length > 0) {
+            if (STATE.currentTab !== 'general') {
+                elements.searchHint.classList.remove('hidden');
+            }
             elements.searchStats.classList.remove('hidden');
-            const count = filtered.length;
-            elements.searchStats.textContent = `${count} result${count !== 1 ? 's' : ''} found`;
+            const total = filtered.length;
+
+            // Check for proximity results
+            const exactCount = filtered.filter(i => i._matchedSuburb !== false).length;
+            const nearbyCount = filtered.filter(i => i._matchedSuburb === false).length;
+
+            if (nearbyCount > 0) {
+                elements.searchStats.textContent = `${exactCount} result${exactCount !== 1 ? 's' : ''} found (${nearbyCount} more within 10km)`;
+            } else {
+                elements.searchStats.textContent = `${total} result${total !== 1 ? 's' : ''} found`;
+            }
+
+            // Track search in Google Analytics (debounced 1s)
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (window.gtag && query.length >= 3) {
+                    gtag('event', 'search', {
+                        'search_term': query,
+                        'tab_name': STATE.currentTab,
+                        'results_count': total
+                    });
+                }
+            }, 1000);
         } else {
             elements.searchStats.classList.add('hidden');
+            elements.searchHint.classList.add('hidden');
         }
     });
 }
@@ -109,19 +140,58 @@ function setupSearch() {
 async function loadTab(tabKey) {
     STATE.currentTab = tabKey;
 
+    // Track tab view in Google Analytics
+    if (window.gtag) {
+        gtag('event', 'tab_view', {
+            'tab_name': tabKey
+        });
+    }
+
+    // Special handling for Map tab
+    if (tabKey === 'map') {
+        elements.loading.classList.add('hidden');
+        elements.error.classList.add('hidden');
+        elements.dataList.classList.add('hidden');
+        elements.searchStats.classList.add('hidden');
+        elements.searchHint.classList.add('hidden');
+        elements.formContainer.classList.add('hidden');
+        elements.mapContainer.classList.remove('hidden');
+        elements.search.parentElement.classList.add('hidden'); // Hide search bar
+        return;
+    }
+
+    // Special handling for Readme tab
+    if (tabKey === 'readme') {
+        elements.loading.classList.add('hidden');
+        elements.error.classList.add('hidden');
+        elements.dataList.classList.add('hidden');
+        elements.searchStats.classList.add('hidden');
+        elements.searchHint.classList.add('hidden');
+        elements.formContainer.classList.add('hidden');
+        elements.mapContainer.classList.add('hidden');
+        elements.readmeContainer.classList.remove('hidden');
+        elements.search.parentElement.classList.add('hidden'); // Hide search bar
+        return;
+    }
+
     // Special handling for Submit Entry tab
     if (tabKey === 'submit') {
         elements.loading.classList.add('hidden');
         elements.error.classList.add('hidden');
         elements.dataList.classList.add('hidden');
         elements.searchStats.classList.add('hidden');
+        elements.searchHint.classList.add('hidden');
         elements.formContainer.classList.remove('hidden');
+        elements.mapContainer.classList.add('hidden');
+        elements.readmeContainer.classList.add('hidden');
         elements.search.parentElement.classList.add('hidden'); // Hide search bar
         return;
     }
 
-    // Hide form container for data tabs
+    // Hide special containers for data tabs
     elements.formContainer.classList.add('hidden');
+    elements.mapContainer.classList.add('hidden');
+    elements.readmeContainer.classList.add('hidden');
     elements.dataList.classList.remove('hidden');
     elements.search.parentElement.classList.remove('hidden'); // Show search bar
 
@@ -277,11 +347,102 @@ function renderData(data) {
 
 function filterData(data, query) {
     if (!query) return data;
+
+    const lowerQuery = query.toLowerCase();
+
+    // Proximity search logic: Find if the query matches or contains a known suburb
+    let searchedSuburb = null;
+    const sortedSuburbs = Object.keys(SUBURBS).sort((a, b) => b.length - a.length);
+
+    for (const suburb of sortedSuburbs) {
+        const sLower = suburb.toLowerCase();
+        // Match exact or check if query contains suburb name (e.g. "Auburn NSW")
+        if (lowerQuery === sLower || lowerQuery.includes(sLower)) {
+            searchedSuburb = {
+                name: suburb,
+                coords: SUBURBS[suburb]
+            };
+            break;
+        }
+    }
+
+    if (searchedSuburb) {
+        return data.map(item => {
+            const itemSuburbName = extractSuburb(item);
+            const itemCoords = itemSuburbName ? SUBURBS[itemSuburbName] : null;
+
+            let distance = null;
+            if (itemCoords) {
+                distance = getDistance(
+                    searchedSuburb.coords[0], searchedSuburb.coords[1],
+                    itemCoords[0], itemCoords[1]
+                );
+            }
+
+            return { ...item, _distance: distance, _matchedSuburb: itemSuburbName === searchedSuburb.name };
+        }).filter(item => {
+            // Include matches OR items within 10km
+            return item._matchedSuburb || (item._distance !== null && item._distance <= 10);
+        }).sort((a, b) => {
+            // Sort: Exact matches first, then by distance
+            if (a._matchedSuburb && !b._matchedSuburb) return -1;
+            if (!a._matchedSuburb && b._matchedSuburb) return 1;
+            if (a._distance !== null && b._distance !== null) return a._distance - b._distance;
+            return 0;
+        });
+    }
+
+    // Standard text search
     return data.filter(item => {
         return Object.values(item).some(val =>
-            String(val).toLowerCase().includes(query)
+            String(val).toLowerCase().includes(lowerQuery)
         );
     });
+}
+
+function extractSuburb(item) {
+    // Priority: Try to find suburb in Address/Location fields
+    const contactKey = Object.keys(item).find(k => k.toLowerCase().includes('contact details')) || '';
+    const address = (item['Address'] || item['Location'] || item[contactKey] || '').trim();
+    if (!address) return null;
+
+    // Normalize address for matching
+    const normAddress = address.toLowerCase();
+
+    // Strategy 1: Looking for "Suburb Name, NSW" or "Suburb Name NSW" or "Suburb Name, SYDNEY"
+    const match = address.match(/([^,\s][^,]+?)\s*,\s*NSW/i) ||
+        address.match(/([^,\s][^,]+?)\s+NSW/i) ||
+        address.match(/([^,\s][^,]+?)\s*,\s*SYDNEY/i);
+
+    if (match) {
+        const potential = match[1].trim().toLowerCase();
+        for (const s in SUBURBS) {
+            if (s.toLowerCase() === potential) return s;
+        }
+    }
+
+    // Strategy 2: Check if address contains any known suburb name (whole word match)
+    // Sort suburbs by length to match "Baulkham Hills" before "Hills"
+    const knownSuburbs = Object.keys(SUBURBS).sort((a, b) => b.length - a.length);
+    for (const s of knownSuburbs) {
+        const sLower = s.toLowerCase();
+        // Use regex for word boundary to avoid matching "Bur" in "Burwood"
+        const regex = new RegExp(`\\b${sLower}\\b`, 'i');
+        if (regex.test(normAddress)) return s;
+    }
+
+    return null;
+}
+
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
 }
 
 function createCard(item) {
@@ -370,6 +531,12 @@ function createCard(item) {
                 </div>
             </div>
             <div class="item-meta">
+                ${item._distance !== undefined && item._distance !== null && !item._matchedSuburb ? `
+                <div class="nearby-badge">
+                    <i data-lucide="navigation"></i>
+                    <span>~${item._distance.toFixed(1)}km nearby</span>
+                </div>` : ''}
+                
                 ${address ? `
                 <div class="meta-row">
                     <i data-lucide="map-pin"></i>
