@@ -155,6 +155,7 @@ async function loadTab(tabKey) {
         elements.searchStats.classList.add('hidden');
         elements.searchHint.classList.add('hidden');
         elements.formContainer.classList.add('hidden');
+        elements.readmeContainer.classList.add('hidden');
         elements.mapContainer.classList.remove('hidden');
         elements.search.parentElement.classList.add('hidden'); // Hide search bar
         return;
